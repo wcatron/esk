@@ -1,6 +1,6 @@
 # Introducing Event Sourcing Kit or ESK
 
-ESK is a simple tool for building event sourcing project. The core is a broker which enables publishing and subscribing to topics via web sockets and storing events on those topics. Think Kafka but lightweight, written in go, with simplicity in mind. It's currently in pre-pre-alpha and we're looking for help!
+ESK is a simple tool for building a project following the event sourcing pattern. The core tool is a broker which enables publishing and subscribing to topics via web sockets and storing events on those topics. Think Kafka but lightweight, written in go, with simplicity in mind. It's currently in pre-pre-alpha and we're looking for help!
 
 ## Current Features
 
