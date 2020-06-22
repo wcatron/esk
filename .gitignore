@@ -17,3 +17,6 @@
 data
 
 esk
+
+# Generated file from pkger
+pkged.go

@@ -1,4 +1,4 @@
-name: Go
+name: Release
 
 on:
   push:
@@ -29,6 +29,19 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
+
+    - name: 'Playground Install'
+      uses: borales/actions-yarn@v2.0.0
+      with:
+        cmd: install # will run `yarn install` command
+
+    - name: 'Playground Build'
+      uses: borales/actions-yarn@v2.0.0
+      with:
+        cmd: build # will run `yarn build` command
+
+    - name: Package Static Resources
+      run: pkger
 
     - name: Build
       run: go build -v .

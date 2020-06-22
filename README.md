@@ -32,3 +32,7 @@ Start the server by running:
 `./esk`
 
 Open the browser to see a simple page to publish and subscribe. Open multiple windows and subscribe to a topic `SUB /topic`. Then publish to the topic from one window `PUB /topic "Hello"` and see the message appear in the console of the other window. Observe every time you subscribe to a topic the broker will send all previous messages sent on the client from oldest to newest.
+
+## Building
+
+The goal is to setup a something like [pkger](https://github.com/markbates/pkger) to bundle the demo code and 
