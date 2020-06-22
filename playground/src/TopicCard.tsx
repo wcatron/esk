@@ -29,6 +29,9 @@ export const TopicCard:React.FC<{
                 })
                 return message
             })
+            if (messageCount !== messages.length) {
+                console.error('Message count did not match messages array.')
+            }
             setMessages(messages)
         } catch (e) {
             console.error(e)
