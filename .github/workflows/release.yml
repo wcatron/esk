@@ -30,22 +30,19 @@ jobs:
             dep ensure
         fi
 
-    - name: 'Playground Install'
+    - name: Playground Install
       working-directory: ./playground
       run: yarn install
 
-    - name: 'Playground Build'
+    - name: Playground Build
       working-directory: ./playground
       run: yarn build
 
+    - name: Install pkger
+      run: go get github.com/markbates/pkger/cmd/pkger
+
     - name: Package Static Resources
       run: pkger
-
-    - name: Build
-      run: go build -v .
-
-    - name: Test
-      run: go test -v .
       
     - name: Run GoReleaser
       env:
