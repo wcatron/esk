@@ -32,13 +32,13 @@ jobs:
 
     - name: 'Playground Install'
       uses: borales/actions-yarn@v2.0.0
-      working-directory: 'playground'
+      working-directory: ./playground
       with:
         cmd: install # will run `yarn install` command
 
     - name: 'Playground Build'
       uses: borales/actions-yarn@v2.0.0
-      working-directory: 'playground'
+      working-directory: ./playground
       with:
         cmd: build # will run `yarn build` command
 
