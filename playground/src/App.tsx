@@ -43,13 +43,12 @@ function App() {
       </div>
       <footer className="App-footer">
         <HostSelector defaultValue={host} onSelect={setHost} connected={connected} />
-        <input value={topic} placeholder="Topic" onChange={(e) => {
+        <input value={topic} placeholder={`Topic (ClientID: ${client && client.clientId})`} onChange={(e) => {
           setTopic(e.currentTarget.value)
         }} /><button onClick={() => {
           subscribe(topic)
           setTopic('')
         }}>Subscribe</button>
-        
       </footer>
     </div>
   );

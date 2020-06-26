@@ -53,6 +53,11 @@ func (c *Client) Read() {
 		fmt.Printf("client:%s:received:%s\n", c.ID, pretty)
 
 		switch message.Command {
+		case CommandConnect:
+			// TODO: Use ClientID sent by client.
+			fmt.Printf("client:connect:%s\n", message.ClientID)
+			c.Connack()
+			break
 		case CommandPublish:
 			c.Pool.Broadcast <- message
 			break
@@ -104,6 +109,15 @@ func (c *Client) Unsuback(topic string) {
 	message := Message{
 		Command: CommandUnsuback,
 		Topic:   []byte(topic),
+	}
+	MessageWriteRaw(&message)
+	c.Publish(message)
+}
+
+func (c *Client) Connack() {
+	message := Message{
+		Command:  CommandConnack,
+		ClientID: []byte(c.ID),
 	}
 	MessageWriteRaw(&message)
 	c.Publish(message)

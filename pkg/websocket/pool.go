@@ -2,6 +2,8 @@ package websocket
 
 import (
 	"fmt"
+
+	"github.com/rs/xid"
 )
 
 type SubscriptionNotification struct {
@@ -44,17 +46,27 @@ func suback(c *Client) {
 	c.Publish(message)
 }
 
+func (pool *Pool) NextClientId() string {
+	id := xid.New().String()
+	for client := range pool.Clients {
+		if client.ID == id {
+			return pool.NextClientId()
+		}
+	}
+	fmt.Printf("pool:NextClientId:%s\n", id)
+	return id
+}
+
 func (pool *Pool) Start() {
 	for {
 		select {
 		case client := <-pool.Register:
 			pool.Clients[client] = true
-			fmt.Println("pool:size:", len(pool.Clients))
-			suback(client)
+			fmt.Println("pool:register:", len(pool.Clients))
 			break
 		case client := <-pool.Unregister:
 			delete(pool.Clients, client)
-			fmt.Println("pool:size:", len(pool.Clients))
+			fmt.Println("pool:unregister:", len(pool.Clients))
 			for _, clients := range pool.Subscriptions {
 				delete(clients, client)
 			}

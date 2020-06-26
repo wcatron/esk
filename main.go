@@ -21,6 +21,7 @@ func handleConnection(pool *websocket.Pool, w http.ResponseWriter, r *http.Reque
 	client := &websocket.Client{
 		Conn: conn,
 		Pool: pool,
+		ID:   pool.NextClientId(),
 	}
 	fmt.Println("main:handleConnection:New client...")
 
