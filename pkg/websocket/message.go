@@ -22,6 +22,7 @@ type Message struct {
 	Payload      []byte `json:"payload"`
 	PayloadStart int
 	Cursor       int64
+	ClientID     []byte `json:"clientId"`
 	Raw          []byte `json:"raw"`
 }
 
@@ -30,8 +31,14 @@ func MessageFromRaw(raw []byte) Message {
 	dataLength := int(raw[1])
 	fmt.Printf("client:command:%d\n", command)
 	switch command {
+	case CommandConnect:
+		return Message{
+			Command:  command,
+			ClientID: raw[2:dataLength],
+			Raw:      raw,
+		}
 	case CommandPublish:
-		topicStartPosition := byte(header_bytes + header_bytes_publish)
+		topicStartPosition := byte(headerBytes + headerBytesPublish)
 		topicEndPosition := topicStartPosition + raw[2]
 		topic := raw[3:topicEndPosition]
 		payload := raw[topicEndPosition:dataLength]
@@ -59,16 +66,23 @@ func MessageFromRaw(raw []byte) Message {
 
 // 0 - command
 // 1 - size of rest of the message
-const header_bytes = 2
+const headerBytes = 2
 
 // 0 - length of topic
-const header_bytes_publish = 1
+const headerBytesPublish = 1
 
 func MessageWriteRaw(message *Message) {
 	switch message.Command {
+	case CommandConnack:
+		restOfMessageLength := len(message.ClientID)
+		raw := make([]byte, headerBytes)
+		raw[0] = message.Command
+		raw[1] = byte(restOfMessageLength)
+		message.Raw = append(raw, message.ClientID...)
+		return
 	case CommandSuback:
 		restOfMessageLength := 1 + len(message.Topic)
-		raw := make([]byte, header_bytes+1)
+		raw := make([]byte, headerBytes+1)
 		raw[0] = message.Command
 		raw[1] = byte(restOfMessageLength)
 		raw[2] = byte(len(message.Topic))
@@ -76,22 +90,22 @@ func MessageWriteRaw(message *Message) {
 		return
 	case CommandUnsuback:
 		restOfMessageLength := 1 + len(message.Topic)
-		raw := make([]byte, header_bytes+1)
+		raw := make([]byte, headerBytes+1)
 		raw[0] = message.Command
 		raw[1] = byte(restOfMessageLength)
 		raw[2] = byte(len(message.Topic))
 		message.Raw = append(raw, message.Topic...)
 		return
 	case CommandInform:
-		restOfMessageLength := header_bytes_publish + len(message.Topic) + len(message.Payload)
-		raw := make([]byte, header_bytes+header_bytes_publish)
+		restOfMessageLength := headerBytesPublish + len(message.Topic) + len(message.Payload)
+		raw := make([]byte, headerBytes+headerBytesPublish)
 		raw[0] = CommandPublish
 		raw[1] = byte(restOfMessageLength)
 		raw[2] = byte(len(message.Topic))
 		message.Raw = append(append(raw, message.Topic...), message.Payload...)
 		return
 	default:
-		raw := make([]byte, header_bytes)
+		raw := make([]byte, headerBytes)
 		raw[0] = message.Command
 		raw[1] = 0
 		message.Raw = raw
