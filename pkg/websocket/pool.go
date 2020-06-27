@@ -9,41 +9,49 @@ import (
 type SubscriptionNotification struct {
 	Client *Client
 	Topic  string
+	Cursor uint64
+}
+
+type WriteNotification struct {
+	Pool    *Pool
+	Message Message
 }
 
 type DataSource struct {
-	Write chan Message
-	Read  chan *SubscriptionNotification
+	Write chan WriteNotification
+	Read  chan SubscriptionNotification
 }
 
 type Pool struct {
-	Register      chan *Client
-	Unregister    chan *Client
-	Clients       map[*Client]bool
-	Subscriptions map[string]map[*Client]bool
-	Subscribe     chan SubscriptionNotification
-	Unsubscribe   chan SubscriptionNotification
-	Broadcast     chan Message
-	DataSource    *DataSource
+	Register         chan *Client
+	Unregister       chan *Client
+	Clients          map[*Client]bool
+	Subscriptions    map[string]map[*Client]bool
+	Subscribe        chan SubscriptionNotification
+	Unsubscribe      chan SubscriptionNotification
+	Broadcast        chan Message
+	BroadcastWritten chan Message
+	DataSource       *DataSource
 }
 
 func NewPool(datasource *DataSource) *Pool {
 	return &Pool{
-		Register:      make(chan *Client),
-		Unregister:    make(chan *Client),
-		Clients:       make(map[*Client]bool),
-		Subscriptions: make(map[string]map[*Client]bool),
-		Subscribe:     make(chan SubscriptionNotification),
-		Unsubscribe:   make(chan SubscriptionNotification),
-		Broadcast:     make(chan Message),
-		DataSource:    datasource,
+		Register:         make(chan *Client),
+		Unregister:       make(chan *Client),
+		Clients:          make(map[*Client]bool),
+		Subscriptions:    make(map[string]map[*Client]bool),
+		Subscribe:        make(chan SubscriptionNotification),
+		Unsubscribe:      make(chan SubscriptionNotification),
+		Broadcast:        make(chan Message),
+		BroadcastWritten: make(chan Message),
+		DataSource:       datasource,
 	}
 }
 
 func suback(c *Client) {
 	message := Message{Command: CommandSuback}
 	MessageWriteRaw(&message)
-	c.Publish(message)
+	c.Send(message)
 }
 
 func (pool *Pool) NextClientId() string {
@@ -73,13 +81,13 @@ func (pool *Pool) Start() {
 			break
 		case subscription := <-pool.Subscribe:
 			fmt.Printf("pool:subscribe:%+v\n", subscription)
-			pool.DataSource.Read <- &subscription
 			clients := pool.Subscriptions[subscription.Topic]
 			if clients == nil {
 				pool.Subscriptions[subscription.Topic] = make(map[*Client]bool)
 			}
 			pool.Subscriptions[subscription.Topic][subscription.Client] = true
 			subscription.Client.Suback(subscription.Topic)
+			pool.DataSource.Read <- subscription
 			break
 		case subscription := <-pool.Unsubscribe:
 			fmt.Printf("pool:unsubscribe:%+v\n", subscription)
@@ -95,7 +103,15 @@ func (pool *Pool) Start() {
 			break
 		case message := <-pool.Broadcast:
 			fmt.Printf("pool:broadcast\n")
-			pool.DataSource.Write <- message
+			pool.DataSource.Write <- WriteNotification{
+				Message: message,
+				Pool:    pool,
+			}
+			break
+		case message := <-pool.BroadcastWritten:
+			fmt.Printf("pool:broadcastWritten\n")
+			message.Command = CommandInform
+			MessageWriteRaw(&message)
 			topic := string(message.Topic)
 			clients := pool.Subscriptions[topic]
 			if clients == nil {
@@ -103,8 +119,9 @@ func (pool *Pool) Start() {
 				break
 			}
 			for client := range clients {
-				client.Publish(message)
+				client.Send(message)
 			}
+			break
 		}
 	}
 }

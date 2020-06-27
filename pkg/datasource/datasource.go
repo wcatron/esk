@@ -17,8 +17,8 @@ type FileDataSource struct {
 func NewDataSource() *FileDataSource {
 	return &FileDataSource{
 		GenericHandler: &websocket.DataSource{
-			Write: make(chan websocket.Message),
-			Read:  make(chan *websocket.SubscriptionNotification),
+			Write: make(chan websocket.WriteNotification),
+			Read:  make(chan websocket.SubscriptionNotification),
 		},
 	}
 }
@@ -35,11 +35,13 @@ func createDirectoryForTopic(topic string) {
 	}
 }
 
-func Write(message websocket.Message) (cursor int64, err error) {
+func Write(message websocket.Message) (cursor uint64, err error) {
 	fmt.Printf("ds:write:%s\n", message.Payload)
 	topic := string(message.Topic)
 	createDirectoryForTopic(topic)
-	f, err := os.OpenFile(pathForTopic(topic), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	path := pathForTopic(topic)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	defer f.Close()
 	if err != nil {
 		fmt.Print(err)
 		return 0, err
@@ -49,39 +51,45 @@ func Write(message websocket.Message) (cursor int64, err error) {
 		fmt.Print(err)
 		return 0, err
 	}
-	_, err = f.Write(append(message.Raw[message.PayloadStart:], '\n'))
-	return info.Size(), err
+	data := append(message.Payload, '\n')
+	_, err = f.Write(data)
+	return uint64(info.Size()), err
 }
 
-func Read(topic string, cursor int64, client *websocket.Client) {
+func Read(topic string, cursor uint64, client *websocket.Client) {
 	f, err := os.OpenFile(pathForTopic(topic), os.O_RDONLY, 0600)
 	if err != nil {
 		print(err)
 		return
 	}
 	log.Printf("ds:read:%d\n", cursor)
-	f.Seek(cursor, 0) // 0 here means offset from start of file
+	f.Seek(int64(cursor), 0) // 0 here means offset from start of file
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
-		log.Printf("scanning:%d:%s\n", cursor, scanner.Text())
-		client.Inform(topic, cursor, scanner.Bytes())
-		cursor += int64(len(scanner.Bytes())) + 1 // 1 for the line split
+		if len(scanner.Bytes()) > 0 {
+			fmt.Printf("scanning:%d:%s\n", cursor, scanner.Text())
+			client.Inform(topic, cursor, scanner.Bytes())
+			cursor += uint64(len(scanner.Bytes())) + 1 // 1 for the line split
+		} else {
+			fmt.Printf("scanning:%d:empty\n", cursor)
+		}
 	}
 }
 
 func (ds *FileDataSource) Listen() {
 	for {
 		select {
-		case message := <-ds.GenericHandler.Write:
-			cursor, err := Write(message)
+		case notification := <-ds.GenericHandler.Write:
+			cursor, err := Write(notification.Message)
 			if err != nil {
 				fmt.Print(err)
 			}
-			fmt.Printf("ds:wrote:%d:%s\n", cursor, message.Payload)
+			notification.Message.Cursor = cursor
+			notification.Pool.BroadcastWritten <- notification.Message
 			break
 		case notification := <-ds.GenericHandler.Read:
-			Read(notification.Topic, 0, notification.Client)
+			Read(notification.Topic, notification.Cursor, notification.Client)
 			break
 		}
 	}
