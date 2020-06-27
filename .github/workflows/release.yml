@@ -41,7 +41,7 @@ jobs:
       run: go get github.com/markbates/pkger/cmd/pkger
 
     - name: Package Static Resources
-      run: pkger -o pkg/playground
+      run: pkger
       
     - name: Run GoReleaser
       env:
