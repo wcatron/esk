@@ -4029,10 +4029,10 @@ escodegen@^1.11.0, escodegen@^1.9.1:
   optionalDependencies:
     source-map "~0.6.1"
 
-esk-client-typescript@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/esk-client-typescript/-/esk-client-typescript-0.1.0.tgz#f7fb4c26c6207556cc3117d42453ed6234eb4e39"
-  integrity sha512-dhfomOA99VLwbsUZeRn8YonxfWKcn3AfxwcER9Afv0mIYdwLFQFMNZ1F2ft53OcnMXYsELqYqlg4wzlNWRFVbg==
+esk-client-typescript@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/esk-client-typescript/-/esk-client-typescript-0.1.1.tgz#54d64f2ef0f5eecce3f65f987b390d0eff691ee0"
+  integrity sha512-WmtJca7z4kAnkRl0+ehNbG8Vd39OFuyc/Pcy7/eiQyqhZ8rLOUfWDhq6RyC/rJuWXsQ3LBKGiqIcE1rDXFKwLQ==
   dependencies:
     util "^0.12.3"
 
