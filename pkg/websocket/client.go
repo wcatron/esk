@@ -62,7 +62,7 @@ func (c *Client) Read() {
 			c.Pool.Broadcast <- message
 			break
 		case CommandSubscribe:
-			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(message.Topic), Client: c}
+			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(message.Topic), Cursor: message.Cursor, Client: c}
 			break
 		case CommandUnsubscribe:
 			c.Pool.Unsubscribe <- SubscriptionNotification{Topic: string(message.Topic), Client: c}
@@ -74,9 +74,9 @@ func (c *Client) Read() {
 	}
 }
 
-func (c *Client) Publish(message Message) {
+func (c *Client) Send(message Message) {
 	pretty, _ := json.MarshalIndent(message, "", "  ")
-	fmt.Printf("client:%s:publish:%s\n", c.ID, pretty)
+	fmt.Printf("client:%s:send:%s\n", c.ID, pretty)
 	err := c.Conn.WriteMessage(websocket.BinaryMessage, message.Raw)
 	if err != nil {
 		fmt.Println(err)
@@ -84,8 +84,7 @@ func (c *Client) Publish(message Message) {
 	}
 }
 
-func (c *Client) Inform(topic string, cursor int64, payload []byte) {
-	fmt.Println("inform:", topic)
+func (c *Client) Inform(topic string, cursor uint64, payload []byte) {
 	message := Message{
 		Command: CommandInform,
 		Topic:   []byte(topic),
@@ -93,7 +92,7 @@ func (c *Client) Inform(topic string, cursor int64, payload []byte) {
 		Cursor:  cursor,
 	}
 	MessageWriteRaw(&message)
-	c.Publish(message)
+	c.Send(message)
 }
 
 func (c *Client) Suback(topic string) {
@@ -102,7 +101,7 @@ func (c *Client) Suback(topic string) {
 		Topic:   []byte(topic),
 	}
 	MessageWriteRaw(&message)
-	c.Publish(message)
+	c.Send(message)
 }
 
 func (c *Client) Unsuback(topic string) {
@@ -111,7 +110,7 @@ func (c *Client) Unsuback(topic string) {
 		Topic:   []byte(topic),
 	}
 	MessageWriteRaw(&message)
-	c.Publish(message)
+	c.Send(message)
 }
 
 func (c *Client) Connack() {
@@ -120,5 +119,5 @@ func (c *Client) Connack() {
 		ClientID: []byte(c.ID),
 	}
 	MessageWriteRaw(&message)
-	c.Publish(message)
+	c.Send(message)
 }

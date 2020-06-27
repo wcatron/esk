@@ -68,9 +68,12 @@
 }
 .TopicCard li {
   list-style: none;
+  flex: 0 0 auto;
 }
-.TopicCard ul {
+.TopicCard ol {
   padding-inline-start: 0;
   height: 170px;
   overflow: scroll;
+  display: flex;
+  flex-direction: column-reverse;
 }

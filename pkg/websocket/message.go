@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/binary"
 	"fmt"
 )
 
@@ -21,7 +22,7 @@ type Message struct {
 	TopicStart   int
 	Payload      []byte `json:"payload"`
 	PayloadStart int
-	Cursor       int64
+	Cursor       uint64
 	ClientID     []byte `json:"clientId"`
 	Raw          []byte `json:"raw"`
 }
@@ -38,9 +39,9 @@ func MessageFromRaw(raw []byte) Message {
 			Raw:      raw,
 		}
 	case CommandPublish:
-		topicStartPosition := byte(headerBytes + headerBytesPublish)
+		topicStartPosition := byte(headerBytes + headerBytesWithTopic)
 		topicEndPosition := topicStartPosition + raw[2]
-		topic := raw[3:topicEndPosition]
+		topic := raw[topicStartPosition:topicEndPosition]
 		payload := raw[topicEndPosition:dataLength]
 		return Message{
 			Command:      command,
@@ -50,12 +51,20 @@ func MessageFromRaw(raw []byte) Message {
 			PayloadStart: int(topicEndPosition),
 			Raw:          raw}
 	case CommandSubscribe:
-		topicEndPosition := 3 + raw[2]
-		topic := raw[3:topicEndPosition]
-		return Message{Command: command, Topic: topic, Raw: raw}
+		topicLength := binary.LittleEndian.Uint16(raw[2:4])
+		cursor := binary.LittleEndian.Uint64(raw[4:12])
+		topicEndPosition := 12 + topicLength
+		check := uint16(len(raw))
+		if check != topicEndPosition {
+			fmt.Printf("check:failed:%d:%d\n", check, topicEndPosition)
+			fmt.Println(raw)
+		}
+		topic := raw[12:topicEndPosition]
+		return Message{Command: command, Topic: topic, Raw: raw, Cursor: cursor}
 	case CommandUnsubscribe:
-		topicEndPosition := 3 + raw[2]
-		topic := raw[3:topicEndPosition]
+		topicLength := binary.LittleEndian.Uint16(raw[2:4])
+		topicEndPosition := 12 + topicLength
+		topic := raw[12:topicEndPosition]
 		return Message{Command: command, Topic: topic, Raw: raw}
 	default:
 		break
@@ -64,12 +73,24 @@ func MessageFromRaw(raw []byte) Message {
 	return message
 }
 
+func topicBytes(length uint16) []byte {
+	array := make([]byte, 2)
+	binary.LittleEndian.PutUint16(array, length)
+	return array
+}
+
+func cursorBytes(cursor uint64) []byte {
+	array := make([]byte, 8)
+	binary.LittleEndian.PutUint64(array, cursor)
+	return array
+}
+
 // 0 - command
 // 1 - size of rest of the message
 const headerBytes = 2
 
 // 0 - length of topic
-const headerBytesPublish = 1
+const headerBytesWithTopic = 2 + 8 // topic length + cursor
 
 func MessageWriteRaw(message *Message) {
 	switch message.Command {
@@ -97,12 +118,18 @@ func MessageWriteRaw(message *Message) {
 		message.Raw = append(raw, message.Topic...)
 		return
 	case CommandInform:
-		restOfMessageLength := headerBytesPublish + len(message.Topic) + len(message.Payload)
-		raw := make([]byte, headerBytes+headerBytesPublish)
-		raw[0] = CommandPublish
+		topicLength := len(message.Topic)
+		payloadLength := len(message.Payload)
+		restOfMessageLength := headerBytesWithTopic + topicLength + payloadLength
+		raw := make([]byte, headerBytes+headerBytesWithTopic+topicLength+payloadLength)
+		raw[0] = CommandInform
 		raw[1] = byte(restOfMessageLength)
-		raw[2] = byte(len(message.Topic))
-		message.Raw = append(append(raw, message.Topic...), message.Payload...)
+		topicBytes := topicBytes(uint16(topicLength))
+		copy(raw[2:], topicBytes)
+		copy(raw[4:], cursorBytes(uint64(message.Cursor)))
+		copy(raw[12:12+topicLength], message.Topic)
+		copy(raw[12+topicLength:], message.Payload)
+		message.Raw = raw
 		return
 	default:
 		raw := make([]byte, headerBytes)
