@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/markbates/pkger"
 	"github.com/wcatron/esk/pkg/datasource"
 	"github.com/wcatron/esk/pkg/websocket"
 )
@@ -30,8 +29,8 @@ func handleConnection(pool *websocket.Pool, w http.ResponseWriter, r *http.Reque
 }
 
 func setupStaticPlayground() {
-	fs := http.FileServer(pkger.Dir("/playground/build"))
-	http.Handle("/", fs)
+	//fs := http.FileServer(pkger.Dir("/playground/build"))
+	//http.Handle("/", fs)
 }
 
 func setupWebsocketEndpoint() {

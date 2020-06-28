@@ -22,3 +22,6 @@ esk
 pkged.go
 
 dist
+
+# Generated when profiling
+*.prof

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
+	"github.com/wcatron/esk/pkg/message"
 )
 
 type Client struct {
@@ -47,34 +48,34 @@ func (c *Client) Read() {
 			handleNonstandardMessage(c, messageType)
 			return
 		}
-		message := MessageFromRaw(p)
+		msg := message.MessageFromRaw(p)
 
-		pretty, _ := json.MarshalIndent(message, "", "  ")
+		pretty, _ := json.MarshalIndent(msg, "", "  ")
 		fmt.Printf("client:%s:received:%s\n", c.ID, pretty)
 
-		switch message.Command {
-		case CommandConnect:
+		switch msg.Command {
+		case message.CommandConnect:
 			// TODO: Use ClientID sent by client.
-			fmt.Printf("client:connect:%s\n", message.ClientID)
+			fmt.Printf("client:connect:%s\n", msg.ClientID)
 			c.Connack()
 			break
-		case CommandPublish:
-			c.Pool.Broadcast <- message
+		case message.CommandPublish:
+			c.Pool.Broadcast <- msg
 			break
-		case CommandSubscribe:
-			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(message.Topic), Cursor: message.Cursor, Client: c}
+		case message.CommandSubscribe:
+			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(msg.Topic), Cursor: msg.Cursor, Client: c}
 			break
-		case CommandUnsubscribe:
-			c.Pool.Unsubscribe <- SubscriptionNotification{Topic: string(message.Topic), Client: c}
+		case message.CommandUnsubscribe:
+			c.Pool.Unsubscribe <- SubscriptionNotification{Topic: string(msg.Topic), Client: c}
 			break
 		default:
-			fmt.Printf("client:error:unknown_command:%d\n", message.Command)
+			fmt.Printf("client:error:unknown_command:%d\n", msg.Command)
 			break
 		}
 	}
 }
 
-func (c *Client) Send(message Message) {
+func (c *Client) Send(message message.Message) {
 	pretty, _ := json.MarshalIndent(message, "", "  ")
 	fmt.Printf("client:%s:send:%s\n", c.ID, pretty)
 	err := c.Conn.WriteMessage(websocket.BinaryMessage, message.Raw)
@@ -85,39 +86,39 @@ func (c *Client) Send(message Message) {
 }
 
 func (c *Client) Inform(topic string, cursor uint64, payload []byte) {
-	message := Message{
-		Command: CommandInform,
+	msg := message.Message{
+		Command: message.CommandInform,
 		Topic:   []byte(topic),
 		Payload: payload,
 		Cursor:  cursor,
 	}
-	MessageWriteRaw(&message)
-	c.Send(message)
+	message.MessageWriteRaw(&msg)
+	c.Send(msg)
 }
 
 func (c *Client) Suback(topic string) {
-	message := Message{
-		Command: CommandSuback,
+	msg := message.Message{
+		Command: message.CommandSuback,
 		Topic:   []byte(topic),
 	}
-	MessageWriteRaw(&message)
-	c.Send(message)
+	message.MessageWriteRaw(&msg)
+	c.Send(msg)
 }
 
 func (c *Client) Unsuback(topic string) {
-	message := Message{
-		Command: CommandUnsuback,
+	msg := message.Message{
+		Command: message.CommandUnsuback,
 		Topic:   []byte(topic),
 	}
-	MessageWriteRaw(&message)
-	c.Send(message)
+	message.MessageWriteRaw(&msg)
+	c.Send(msg)
 }
 
 func (c *Client) Connack() {
-	message := Message{
-		Command:  CommandConnack,
+	msg := message.Message{
+		Command:  message.CommandConnack,
 		ClientID: []byte(c.ID),
 	}
-	MessageWriteRaw(&message)
-	c.Send(message)
+	message.MessageWriteRaw(&msg)
+	c.Send(msg)
 }

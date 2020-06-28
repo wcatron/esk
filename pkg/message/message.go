@@ -1,4 +1,4 @@
-package websocket
+package message
 
 import (
 	"encoding/binary"
@@ -71,18 +71,6 @@ func MessageFromRaw(raw []byte) Message {
 	}
 	message := Message{Command: raw[0], Raw: raw}
 	return message
-}
-
-func topicBytes(length uint16) []byte {
-	array := make([]byte, 2)
-	binary.LittleEndian.PutUint16(array, length)
-	return array
-}
-
-func cursorBytes(cursor uint64) []byte {
-	array := make([]byte, 8)
-	binary.LittleEndian.PutUint64(array, cursor)
-	return array
 }
 
 // 0 - command
