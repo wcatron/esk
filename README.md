@@ -9,12 +9,12 @@ ESK is a simple tool for building a project following the event sourcing pattern
 - Write events to a file for each topic
 - On subscribe receive past events sent to the topic
 - Simple cli tooling (`./esk --port 8080`)
-- 
-- Typescript client library
+- Clients can subscribe to a topic with a cursor and receive messages since that point
+- Client library: [typescript](https://github.com/wcatron/esk-client-typescript)
 
 ### Planned Features
 
-- Support for clients to subscribe to a topic with a cursor to reduce redundant INFORM messages
+- Multiple ways to subscribe (full history, no history, from cursor, latest only).
 - [Cluster support](./ClusterSupport.md) for scalability and high availability
 - And much much more...
 
