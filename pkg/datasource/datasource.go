@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/wcatron/esk/pkg/message"
 	"github.com/wcatron/esk/pkg/websocket"
 )
 
@@ -35,9 +36,9 @@ func createDirectoryForTopic(topic string) {
 	}
 }
 
-func Write(message websocket.Message) (cursor uint64, err error) {
-	fmt.Printf("ds:write:%s\n", message.Payload)
-	topic := string(message.Topic)
+func Write(msg message.Message) (cursor uint64, err error) {
+	fmt.Printf("ds:write:%s\n", msg.Payload)
+	topic := string(msg.Topic)
 	createDirectoryForTopic(topic)
 	path := pathForTopic(topic)
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -51,7 +52,7 @@ func Write(message websocket.Message) (cursor uint64, err error) {
 		fmt.Print(err)
 		return 0, err
 	}
-	data := append(message.Payload, '\n')
+	data := append(msg.Payload, '\n')
 	_, err = f.Write(data)
 	return uint64(info.Size()), err
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rs/xid"
+	"github.com/wcatron/esk/pkg/message"
 )
 
 type SubscriptionNotification struct {
@@ -14,7 +15,7 @@ type SubscriptionNotification struct {
 
 type WriteNotification struct {
 	Pool    *Pool
-	Message Message
+	Message message.Message
 }
 
 type DataSource struct {
@@ -29,8 +30,8 @@ type Pool struct {
 	Subscriptions    map[string]map[*Client]bool
 	Subscribe        chan SubscriptionNotification
 	Unsubscribe      chan SubscriptionNotification
-	Broadcast        chan Message
-	BroadcastWritten chan Message
+	Broadcast        chan message.Message
+	BroadcastWritten chan message.Message
 	DataSource       *DataSource
 }
 
@@ -42,16 +43,16 @@ func NewPool(datasource *DataSource) *Pool {
 		Subscriptions:    make(map[string]map[*Client]bool),
 		Subscribe:        make(chan SubscriptionNotification),
 		Unsubscribe:      make(chan SubscriptionNotification),
-		Broadcast:        make(chan Message),
-		BroadcastWritten: make(chan Message),
+		Broadcast:        make(chan message.Message),
+		BroadcastWritten: make(chan message.Message),
 		DataSource:       datasource,
 	}
 }
 
 func suback(c *Client) {
-	message := Message{Command: CommandSuback}
-	MessageWriteRaw(&message)
-	c.Send(message)
+	msg := message.Message{Command: message.CommandSuback}
+	message.MessageWriteRaw(&msg)
+	c.Send(msg)
 }
 
 func (pool *Pool) NextClientId() string {
@@ -101,25 +102,25 @@ func (pool *Pool) Start() {
 			}
 			subscription.Client.Unsuback(subscription.Topic)
 			break
-		case message := <-pool.Broadcast:
+		case msg := <-pool.Broadcast:
 			fmt.Printf("pool:broadcast\n")
 			pool.DataSource.Write <- WriteNotification{
-				Message: message,
+				Message: msg,
 				Pool:    pool,
 			}
 			break
-		case message := <-pool.BroadcastWritten:
+		case msg := <-pool.BroadcastWritten:
 			fmt.Printf("pool:broadcastWritten\n")
-			message.Command = CommandInform
-			MessageWriteRaw(&message)
-			topic := string(message.Topic)
+			msg.Command = message.CommandInform
+			message.MessageWriteRaw(&msg)
+			topic := string(msg.Topic)
 			clients := pool.Subscriptions[topic]
 			if clients == nil {
 				fmt.Printf("pool:broadcast:no clients for topic:%s\n", topic)
 				break
 			}
 			for client := range clients {
-				client.Send(message)
+				client.Send(msg)
 			}
 			break
 		}

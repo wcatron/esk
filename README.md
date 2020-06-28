@@ -35,4 +35,10 @@ Open the browser to see a simple page to publish and subscribe. Open multiple wi
 
 ## Building
 
-The goal is to setup a something like [pkger](https://github.com/markbates/pkger) to bundle the demo code and 
+The goal is to setup a something like [pkger](https://github.com/markbates/pkger) to bundle the demo code however currently it wont work in the CI process.
+
+## Testing
+
+Run all tests in all packages:
+
+`go test ./...`
