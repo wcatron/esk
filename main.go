@@ -9,6 +9,7 @@ import (
 	"github.com/markbates/pkger"
 	"github.com/wcatron/esk/pkg/datasource"
 	"github.com/wcatron/esk/pkg/websocket"
+	"github.com/wcatron/esk/pkg/config"
 )
 
 func handleConnection(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,8 @@ func setupStaticPlayground() {
 func setupWebsocketEndpoint() {
 	datasource := datasource.NewDataSource()
 	go datasource.Listen()
-	pool := websocket.NewPool(datasource.GenericHandler)
+	config := config.NewConfig(datasource.GenericHandler)
+	pool := websocket.NewPool(datasource.GenericHandler, config)
 	go pool.Start()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

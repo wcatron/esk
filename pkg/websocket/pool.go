@@ -23,6 +23,10 @@ type DataSource struct {
 	Read  chan SubscriptionNotification
 }
 
+type Config struct {
+
+}
+
 type Pool struct {
 	Register         chan *Client
 	Unregister       chan *Client
@@ -33,9 +37,10 @@ type Pool struct {
 	Broadcast        chan message.Message
 	BroadcastWritten chan message.Message
 	DataSource       *DataSource
+	Config *Config
 }
 
-func NewPool(datasource *DataSource) *Pool {
+func NewPool(datasource *DataSource, config *Config) *Pool {
 	return &Pool{
 		Register:         make(chan *Client),
 		Unregister:       make(chan *Client),
@@ -46,6 +51,7 @@ func NewPool(datasource *DataSource) *Pool {
 		Broadcast:        make(chan message.Message),
 		BroadcastWritten: make(chan message.Message),
 		DataSource:       datasource,
+		Config:			  config,
 	}
 }
 
