@@ -126,3 +126,26 @@ func MessageWriteRaw(message *Message) {
 		message.Raw = raw
 	}
 }
+
+func CommandAsString(command byte) string {
+	switch command {
+	case CommandConnect:
+		return "CommandConnect"
+	case CommandConnack:
+		return "CommandConnack"
+	case CommandPublish:
+		return "CommandPublish"
+	case CommandSubscribe:
+		return "CommandSubscribe"
+	case CommandSuback:
+		return "CommandSuback"
+	case CommandUnsubscribe:
+		return "CommandUnsubscribe"
+	case CommandUnsuback:
+		return "CommandUnsuback"
+	case CommandInform:
+		return "CommandInform"
+	default:
+		return "Unmapped"
+	}
+}

@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/wcatron/esk/pkg/message"
 )
 
+// Client structure
 type Client struct {
 	ID   string
 	Conn *websocket.Conn
@@ -50,8 +50,7 @@ func (c *Client) Read() {
 		}
 		msg := message.MessageFromRaw(p)
 
-		pretty, _ := json.MarshalIndent(msg, "", "  ")
-		fmt.Printf("client:%s:received:%s\n", c.ID, pretty)
+		fmt.Printf("client:%s:received:%s\n", c.ID, message.CommandAsString(msg.Command))
 
 		switch msg.Command {
 		case message.CommandConnect:
@@ -75,16 +74,17 @@ func (c *Client) Read() {
 	}
 }
 
-func (c *Client) Send(message message.Message) {
-	pretty, _ := json.MarshalIndent(message, "", "  ")
-	fmt.Printf("client:%s:send:%s\n", c.ID, pretty)
-	err := c.Conn.WriteMessage(websocket.BinaryMessage, message.Raw)
+// Send message to client
+func (c *Client) Send(msg message.Message) {
+	fmt.Printf("client:%s:send:%s\n", c.ID, message.CommandAsString(msg.Command))
+	err := c.Conn.WriteMessage(websocket.BinaryMessage, msg.Raw)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 }
 
+// Inform client of some payload
 func (c *Client) Inform(topic string, cursor uint64, payload []byte) {
 	msg := message.Message{
 		Command: message.CommandInform,
@@ -96,6 +96,7 @@ func (c *Client) Inform(topic string, cursor uint64, payload []byte) {
 	c.Send(msg)
 }
 
+// Suback : Acknowledge subscription to topic
 func (c *Client) Suback(topic string) {
 	msg := message.Message{
 		Command: message.CommandSuback,
@@ -105,6 +106,7 @@ func (c *Client) Suback(topic string) {
 	c.Send(msg)
 }
 
+// Unsuback : Acknowledge unsubscribe from topic
 func (c *Client) Unsuback(topic string) {
 	msg := message.Message{
 		Command: message.CommandUnsuback,
@@ -114,6 +116,7 @@ func (c *Client) Unsuback(topic string) {
 	c.Send(msg)
 }
 
+// Connack : Acknowledge connection of client
 func (c *Client) Connack() {
 	msg := message.Message{
 		Command:  message.CommandConnack,
