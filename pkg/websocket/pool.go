@@ -24,7 +24,8 @@ type DataSource struct {
 }
 
 type Config struct {
-
+	DataSource       *DataSource
+	RemoteDataSource *DataSource
 }
 
 type Pool struct {
@@ -36,11 +37,10 @@ type Pool struct {
 	Unsubscribe      chan SubscriptionNotification
 	Broadcast        chan message.Message
 	BroadcastWritten chan message.Message
-	DataSource       *DataSource
-	Config *Config
+	Config           *Config
 }
 
-func NewPool(datasource *DataSource, config *Config) *Pool {
+func NewPool(config *Config) *Pool {
 	return &Pool{
 		Register:         make(chan *Client),
 		Unregister:       make(chan *Client),
@@ -50,8 +50,7 @@ func NewPool(datasource *DataSource, config *Config) *Pool {
 		Unsubscribe:      make(chan SubscriptionNotification),
 		Broadcast:        make(chan message.Message),
 		BroadcastWritten: make(chan message.Message),
-		DataSource:       datasource,
-		Config:			  config,
+		Config:           config,
 	}
 }
 
@@ -94,7 +93,7 @@ func (pool *Pool) Start() {
 			}
 			pool.Subscriptions[subscription.Topic][subscription.Client] = true
 			subscription.Client.Suback(subscription.Topic)
-			pool.DataSource.Read <- subscription
+			pool.Config.DataSource.Read <- subscription
 			break
 		case subscription := <-pool.Unsubscribe:
 			fmt.Printf("pool:unsubscribe:%+v\n", subscription)
@@ -110,7 +109,7 @@ func (pool *Pool) Start() {
 			break
 		case msg := <-pool.Broadcast:
 			fmt.Printf("pool:broadcast\n")
-			pool.DataSource.Write <- WriteNotification{
+			pool.Config.DataSource.Write <- WriteNotification{
 				Message: msg,
 				Pool:    pool,
 			}

@@ -5,5 +5,7 @@ import (
 )
 
 func NewConfig(datasource *websocket.DataSource) *websocket.Config {
-	return &websocket.Config{}
+	return &websocket.Config{
+		DataSource: datasource,
+	}
 }
