@@ -6,14 +6,16 @@ import (
 )
 
 const (
-	CommandConnect     = 1
-	CommandConnack     = 2
-	CommandPublish     = 3
-	CommandSubscribe   = 8
-	CommandSuback      = 9
-	CommandUnsubscribe = 10
-	CommandUnsuback    = 11
-	CommandInform      = 103
+	CommandConnect           = 1
+	CommandConnack           = 2
+	CommandPublish           = 3
+	CommandSubscribe         = 8
+	CommandSubscribeLastOnly = 80
+	CommandSubscribeEnd      = 81
+	CommandSuback            = 9
+	CommandUnsubscribe       = 10
+	CommandUnsuback          = 11
+	CommandInform            = 103
 )
 
 type Message struct {
@@ -127,6 +129,7 @@ func MessageWriteRaw(message *Message) {
 	}
 }
 
+// CommandAsString Convert command to string
 func CommandAsString(command byte) string {
 	switch command {
 	case CommandConnect:
@@ -137,6 +140,10 @@ func CommandAsString(command byte) string {
 		return "CommandPublish"
 	case CommandSubscribe:
 		return "CommandSubscribe"
+	case CommandSubscribeLastOnly:
+		return "CommandSubscribeLastOnly"
+	case CommandSubscribeEnd:
+		return "CommandSubscribeEnd"
 	case CommandSuback:
 		return "CommandSuback"
 	case CommandUnsubscribe:

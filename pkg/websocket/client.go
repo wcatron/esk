@@ -20,7 +20,7 @@ func isMessageTypeNonstandard(messageType int) bool {
 }
 
 func handleError(c *Client, err error) {
-	fmt.Print("client:error\n")
+	fmt.Println("client:error")
 	log.Println(err)
 }
 
@@ -62,7 +62,13 @@ func (c *Client) Read() {
 			c.Pool.Broadcast <- msg
 			break
 		case message.CommandSubscribe:
-			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(msg.Topic), Cursor: msg.Cursor, Client: c}
+			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(msg.Topic), Cursor: msg.Cursor, Client: c, Type: AtCursor}
+			break
+		case message.CommandSubscribeLastOnly:
+			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(msg.Topic), Cursor: msg.Cursor, Client: c, Type: LastOnly}
+			break
+		case message.CommandSubscribeEnd:
+			c.Pool.Subscribe <- SubscriptionNotification{Topic: string(msg.Topic), Cursor: msg.Cursor, Client: c, Type: End}
 			break
 		case message.CommandUnsubscribe:
 			c.Pool.Unsubscribe <- SubscriptionNotification{Topic: string(msg.Topic), Client: c}

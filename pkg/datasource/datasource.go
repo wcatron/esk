@@ -32,7 +32,7 @@ func createDirectoryForTopic(topic string) {
 	directory := filepath.Dir(pathForTopic(topic))
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		fmt.Printf("ds:createDirectoryForTopic:%s\n", directory)
-		os.Mkdir(directory, 0700)
+		os.MkdirAll(directory, 0700)
 	}
 }
 
@@ -57,14 +57,32 @@ func Write(msg message.Message) (cursor uint64, err error) {
 	return uint64(info.Size()), err
 }
 
-func Read(topic string, cursor uint64, client *websocket.Client) {
+// Read Informs the client of the notification of all payloads based on subscription type and cursor
+func Read(notification websocket.SubscriptionNotification) {
+	topic := string(notification.Topic)
+	cursor := notification.Cursor
+	client := notification.Client
 	f, err := os.OpenFile(pathForTopic(topic), os.O_RDONLY, 0600)
 	if err != nil {
 		print(err)
 		return
 	}
 	log.Printf("ds:read:%d\n", cursor)
-	f.Seek(int64(cursor), 0) // 0 here means offset from start of file
+	if notification.Type == websocket.AtCursor {
+		// Seek to offset cursor from start of file (0)
+		f.Seek(int64(cursor), 0)
+	} else if notification.Type == websocket.LastOnly {
+		// Seek to offset 0 from end of the file (2)
+		// TODO: Store last cursor size or location so one can seek from there.
+		log.Fatal("LastOnly is not yet supported")
+		f.Seek(0, 2)
+	} else if notification.Type == websocket.End {
+		// Seek to offset 0 from end of the file (2)
+		f.Seek(0, 2)
+	} else {
+		log.Fatal("Unknown notification type")
+	}
+
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
@@ -90,7 +108,7 @@ func (ds *FileDataSource) Listen() {
 			notification.Pool.BroadcastWritten <- notification.Message
 			break
 		case notification := <-ds.GenericHandler.Read:
-			Read(notification.Topic, notification.Cursor, notification.Client)
+			Read(notification)
 			break
 		}
 	}

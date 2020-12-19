@@ -21,6 +21,9 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
+    - name: Conventional Changelog Action
+      uses: TriPSs/conventional-changelog-action@v3
+
     - name: Get dependencies
       run: |
         go get -v -t -d ./...

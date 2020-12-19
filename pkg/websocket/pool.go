@@ -7,10 +7,23 @@ import (
 	"github.com/wcatron/esk/pkg/message"
 )
 
+// SubscriptionType Designates how the client would like to subscribe to the topic.
+type SubscriptionType int8
+
+const (
+	// LastOnly Send the last message only
+	LastOnly SubscriptionType = -1
+	// AtCursor Send all messages since the cursor provided
+	AtCursor = 0
+	// End Send no messages
+	End = 1
+)
+
 type SubscriptionNotification struct {
 	Client *Client
 	Topic  string
 	Cursor uint64
+	Type   SubscriptionType
 }
 
 type WriteNotification struct {

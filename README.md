@@ -1,20 +1,21 @@
 # Introducing Event Sourcing Kit or ESK
 
-ESK is a simple tool for building a project following the event sourcing pattern. The core tool is a broker which enables publishing and subscribing to topics via web sockets and storing events on those topics. Think Kafka but lightweight, written in go, with simplicity in mind. It's currently in pre-pre-alpha and we're looking for help!
+ESK is a simple library for building a project following the [event sourcing pattern](https://martinfowler.com/eaaDev/EventSourcing.html). The core tool is a broker which enables publishing and subscribing to topics via web sockets and storing events on those topics. Think Kafka but lightweight, written in go, with simplicity in mind. It's currently in pre-pre-alpha and we're looking for help!
 
 ## Current Features
 
 - A basic broker which can be connected to via WebSockets
 - Subscribe and publish to topics
-- Write events to a file for each topic
-- On subscribe receive past events sent to the topic
+- Write events to binary files for each topic
+- Every event is a line in the file
+- On subscribe receive past event sent to the topic
 - Simple cli tooling (`./esk --port 8080`)
 - Clients can subscribe to a topic with a cursor and receive messages since that point
 - Client library: [typescript](https://github.com/wcatron/esk-client-typescript)
 
 ### Planned Features
 
-- Multiple ways to subscribe (full history, no history, from cursor, latest only).
+- Subscribe only to the last event.
 - [Cluster support](./ClusterSupport.md) for scalability and high availability
 - And much much more...
 
