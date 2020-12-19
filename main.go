@@ -49,10 +49,15 @@ func setupWebsocketEndpoint() {
 
 func main() {
 	port := flag.String("port", "8080", "Port to start the server on.")
+	disablePlayground := flag.Bool("no-playground", false, "Expose playground")
 	flag.Parse()
 	fmt.Println("main:Starting server...")
-	setupStaticPlayground()
 	setupWebsocketEndpoint()
-	fmt.Printf("main:Listening at http://localhost:%s and ws://localhost:%s/ws\n", *port, *port)
+	fmt.Printf("main:Listening at ws://localhost:%s/ws\n", *port)
+
+	if *disablePlayground == false {
+		setupStaticPlayground()
+		fmt.Printf("main:Playground exposed at http://localhost:%s\n", *port)
+	}
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
