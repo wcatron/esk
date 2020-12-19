@@ -13,7 +13,7 @@
     "esk-client-typescript": "^0.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1",
+    "react-scripts": "4.0.1",
     "typescript": "~3.7.2",
     "util": "^0.12.3"
   },
