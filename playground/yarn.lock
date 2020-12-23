@@ -4523,10 +4523,10 @@ escodegen@^1.14.1:
   optionalDependencies:
     source-map "~0.6.1"
 
-esk-client-typescript@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/esk-client-typescript/-/esk-client-typescript-0.1.1.tgz#54d64f2ef0f5eecce3f65f987b390d0eff691ee0"
-  integrity sha512-WmtJca7z4kAnkRl0+ehNbG8Vd39OFuyc/Pcy7/eiQyqhZ8rLOUfWDhq6RyC/rJuWXsQ3LBKGiqIcE1rDXFKwLQ==
+esk-client-typescript@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/esk-client-typescript/-/esk-client-typescript-0.2.1.tgz#56ffe4e7ad81955edf4c1d79109371e714c71066"
+  integrity sha512-KgsmF+FDnCly0W0DMZI9ntZWLjEatFPGi8tDqcfXLHe9l/cIcLfghm+86fq0o5mGGkftVeMDoOES+NQCv50naA==
   dependencies:
     util "^0.12.3"
 
