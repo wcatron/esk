@@ -29,7 +29,7 @@ changelog:
 brews:
   - tap:
       owner: wcatron
-      name: esk
+      name: homebrew-esk
     folder: Formula
     homepage: https://github.com/wcatron/esk
     description: A simple library for building a project following the event sourcing pattern.
