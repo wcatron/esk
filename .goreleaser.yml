@@ -27,7 +27,7 @@ changelog:
       - "^docs:"
       - "^test:"
 brews:
-  - github:
+  - tap:
       owner: wcatron
       name: esk
     folder: Formula
