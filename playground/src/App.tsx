@@ -1,55 +1,70 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
-import { Client } from 'esk-client-typescript';
-import { HostSelector } from './HostSelector';
-import { TopicCard } from './TopicCard';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import { Client } from "esk-client-typescript";
+import { TopicCard } from "./TopicCard";
+import { Footer } from "./Footer";
+let client: Client;
 
-let client:Client
+const useEsk = (defaultHost: string) => {
+  const [host, setHost] = useState(defaultHost);
+  const [connected, setConnected] = useState(false);
+  const [topics, setTopics] = useState<string[]>([]);
 
-function App() {
-  const [ connected, setConnected ] = useState(false)
-  const [ topic, setTopic ] = useState('')
-  const [ topics, setTopics ] = useState<string[]>([])
-  const [ host, setHost ] = useState(window.location.host)
   useEffect(() => {
-    console.log('Connecting...')
+    console.log("Connecting...");
     client = new Client({
-      url: 'ws://'+host+'/ws'
-    })
-    client.on('open', () => {
-      setConnected(true)
-      console.log('Connected')
-    })
-    client.on('close', () => {
-      setConnected(false)
-    })
+      url: "ws://" + host + "/ws",
+    });
+    client.on("open", () => {
+      setConnected(true);
+      console.log("Connected");
+    });
+    client.on("close", () => {
+      setConnected(false);
+    });
     return () => {
-      client.disconnect()
-    }
-  }, [host])
+      client.disconnect();
+    };
+  }, [host]);
 
   const subscribe = (topic: string) => {
-    setTopics([...topics, topic])
-  }
+    setTopics([...topics, topic]);
+  };
+
+  return { host, setHost, connected, topics, client, subscribe };
+};
+
+function App() {
+  const { host, setHost, connected, topics, subscribe } = useEsk(
+    window.location.host
+  );
 
   return (
-    <div className="App" style={{
-      background: connected ? '#282c34' : '#484c54'
-    }}>
+    <div
+      className="App"
+      style={{
+        background: connected ? "#282c34" : "#484c54",
+      }}
+    >
       <div>
-        {topics.map(topic => <TopicCard key={topic} topic={topic} client={client} onPublish={(payload: string) => {
-          client.publish(topic, payload)
-        }} />)}
+        {topics.map((topic) => (
+          <TopicCard
+            key={topic}
+            topic={topic}
+            client={client}
+            onPublish={(payload: string) => {
+              client.publish(topic, payload);
+            }}
+          />
+        ))}
       </div>
-      <footer className="App-footer">
-        <HostSelector defaultValue={host} onSelect={setHost} connected={connected} />
-        <input value={topic} placeholder={`Topic (ClientID: ${client && client.clientId})`} onChange={(e) => {
-          setTopic(e.currentTarget.value)
-        }} /><button onClick={() => {
-          subscribe(topic)
-          setTopic('')
-        }}>Subscribe</button>
-      </footer>
+      <Footer
+        host={host}
+        setHost={setHost}
+        client={client}
+        connected={connected}
+        subscribe={subscribe}
+      />
     </div>
   );
 }

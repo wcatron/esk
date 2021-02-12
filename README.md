@@ -30,7 +30,7 @@ It's that simple! Open a browser to view the playground and start publishing and
 
 - A basic broker which can be connected to via WebSockets
 - Subscribe and publish to topics
-- Write events to binary files for each topic
+- Publishing writes events to binary files for each topic
 - Every event is a line in the file
 - On subscribe receive past event sent to the topic
 - Simple cli tooling (`./esk --port 8080`)
@@ -63,3 +63,9 @@ Open the browser to see a simple page to publish and subscribe. Open multiple wi
 Run all tests in all packages:
 
 `go test ./...`
+
+## Questions
+
+*Is this a database?*
+
+Technically, yes like Kafka esk stores messages (unless published ephemerally) in a data store. This currently is **not** a hardened data store. It literally saves the payload to files in a `data` directory from the current working directory.
